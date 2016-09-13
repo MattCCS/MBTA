@@ -1,0 +1,3 @@
+[submodule "Gmail"]
+	path = Gmail
+	url = git@github.com:MattCCS/Gmail.git
