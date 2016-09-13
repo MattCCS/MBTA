@@ -2,7 +2,7 @@
 import datetime
 
 import mbta
-import email
+from Gmail import gmail
 
 
 DICT_DAYSTRING_TO_DAY = dict(zip('MTWRFSU', range(7)))  # datetime.weekday()
@@ -29,13 +29,20 @@ class NotificationConfig(object):
         self.days = set(DICT_DAYSTRING_TO_DAY[day] for day in days)
         (self.start, self.end) = map(to_time, between.split('-'))
         self.time_deltas = [datetime.timedelta(minutes=int(t)) for t in times.split(' ')]
+        self.travel_minutes = travel_minutes
         self.travel_delta = datetime.timedelta(minutes=int(travel_minutes))
         self.line = line
         self.url = url
 
-    def email(self, time):
-        print(time)
-        raise NotImplementedError()
+    def email(self, td, data):
+        print(td)
+        gmail.send_email(
+            self.phone,
+            "You should leave in {time} minutes for {line}!".format(
+                line=self.line, time=td.seconds // 60),
+            "The bus should arrive at {prediction}, and it will take you {travel} minutes to walk there.".format(
+                prediction=data.next_predicted().strftime("%X")[:-3], travel=self.travel_minutes)
+            )
 
     def in_range(self, dt):
         return (dt.weekday() in self.days)
@@ -56,11 +63,11 @@ class NotificationConfig(object):
             delta = time + self.travel_delta
             # print()
             # print(time, self.travel_delta, delta)
-            # print(data_before.next_delta(), data_after.next_delta())
+            print(data_before.next_delta(), delta, data_after.next_delta())
             if data_before.next_delta() >= delta > data_after.next_delta():
                 # "You should leave in {time} minutes"
                 # "It will take {self.travel_delta} minutes to walk there"
-                self.email(time)
+                self.email(time, data_after)
 
     def __repr__(self):
         return str(self.__dict__)
