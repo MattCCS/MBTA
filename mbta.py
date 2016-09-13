@@ -4,12 +4,11 @@ import datetime
 import re
 import sys
 import time
-import urllib.request
-import urllib.error
+import urllib
 
 import data
 
-assert sys.version_info >= (3, 5)
+# assert sys.version_info >= (3, 5)
 
 
 parser = argparse.ArgumentParser()
@@ -32,8 +31,8 @@ def yield_for_url(url):
         before = time.time()
 
         try:
-            xml = str(urllib.request.urlopen(url).read())
-        except urllib.error.URLError as e:
+            xml = str(urllib.urlopen(url).read())
+        except urllib.error as e:
             print("Error: {}".format(e))
 
         now = datetime.datetime.now()
