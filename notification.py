@@ -1,13 +1,21 @@
 
 import datetime
 
-import mbta
-from Gmail import gmail
+from . import mbta
+from . import settings
+from . import twilio_tools
+
+# from Gmail import gmail
 
 
 DICT_DAYSTRING_TO_DAY = dict(zip('MTWRFSU', range(7)))  # datetime.weekday()
 
 CONFIGS = {}
+
+NOTIFICATION_FORM = """\
+Leave in {time} minutes for {line}!
+
+{linecap} should arrive at {prediction}, leaving {travel} minutes to walk there."""
 
 
 def pairs(iterator):
@@ -36,16 +44,28 @@ class NotificationConfig(object):
 
     def email(self, td, data):
         print(td)
-        gmail.send_email(
+
+        time_ = td.seconds // 60
+        print(data.next_predicted())
+        prediction = data.next_predicted().strftime("%-I:%M %p")
+
+        twilio_tools.send(
             self.phone,
-            "You should leave in {time} minutes for {line}!".format(
-                line=self.line, time=td.seconds // 60),
-            "The bus should arrive at {prediction}, and it will take you {travel} minutes to walk there.".format(
-                prediction=data.next_predicted().strftime("%X")[:-3], travel=self.travel_minutes)
+            NOTIFICATION_FORM.format(
+                time=time_,
+                line=self.line,
+                linecap=self.line.capitalize(),
+                prediction=prediction,
+                travel=self.travel_minutes,
             )
+        )
 
     def in_range(self, dt):
-        return (dt.weekday() in self.days)
+        in_day_set = dt.weekday() in self.days
+        in_time_range = (self.start <= dt.time() <= self.end)
+        # return (in_day_set and in_time_range)
+        # return (in_day_set)
+        return True
 
     def check(self, data_before, data_after):
         print("checking...")
@@ -53,20 +73,14 @@ class NotificationConfig(object):
         if not data_before or not data_after:
             return
 
-        # print(data_before.next_delta(), data_after.next_delta())
-
         now = datetime.datetime.now()
         if not self.in_range(now):
             return
 
         for time in self.time_deltas:
             delta = time + self.travel_delta
-            # print()
-            # print(time, self.travel_delta, delta)
             print(data_before.next_delta(), delta, data_after.next_delta())
             if data_before.next_delta() >= delta > data_after.next_delta():
-                # "You should leave in {time} minutes"
-                # "It will take {self.travel_delta} minutes to walk there"
                 self.email(time, data_after)
 
     def __repr__(self):
@@ -76,7 +90,7 @@ class NotificationConfig(object):
 def load_configs():
     global CONFIGS
 
-    with open("configs.csv") as configs:
+    with open(str(settings.CONFIGS_PATH)) as configs:
         configs.readline()
         for line in configs:
             try:

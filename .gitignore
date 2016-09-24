@@ -1,4 +1,10 @@
+.DS_Store
+
 configs.csv
 *.txt
 __pycache__
 *.pyc
+
+*.log
+
+/lib

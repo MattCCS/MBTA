@@ -4,12 +4,14 @@ import datetime
 import re
 import sys
 import time
-import urllib
+import urllib.request
+import urllib.error
 
-import data
+from . import data
+from . import settings
 
-# assert sys.version_info >= (3, 5)
 
+LOG = open(str(settings.LOG_PATH), 'a')
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbose", type=int, default=0)
@@ -31,15 +33,21 @@ def yield_for_url(url):
         before = time.time()
 
         try:
-            xml = str(urllib.urlopen(url).read())
-        except urllib.error as e:
+            xml = str(urllib.request.urlopen(url).read())
+        except urllib.error.URLError as e:
             print("Error: {}".format(e))
 
         now = datetime.datetime.now()
         times = re.findall(SECONDS_PATTERN, xml)
 
         # if VERBOSE == 0:
-        yield data.DataPoint(int(now.strftime("%s")), map(int, times))
+        now_epoch = int(now.strftime("%s"))
+        times = [int(t) for t in times]
+
+        LOG.write("{},{}\n".format(now_epoch, ','.join(map(str, times))))
+        LOG.flush()
+
+        yield data.DataPoint(now_epoch, list(times))
         # elif VERBOSE == 1:
         #     yield data.DataPoint(now.strftime("%c"), ', '.join(map(mmss, map(int, times))))
 
