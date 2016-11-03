@@ -1,6 +1,14 @@
 #!/bin/bash
 
+if [ "$#" -ne 1 ]; then
+    echo "Must pass the name of the config to use!  (Ex: 'matt')"
+    exit
+fi
+
+
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd ) # directory of this script
 cd $DIR/..
 
-python3 -m MBTA.notification
+
+python3 -m MBTA.logger $1 &> "$DIR/logs/$1_logger.log" &
+python3 -m MBTA.text_service $1 &> "$DIR/logs/$1_service.log" &

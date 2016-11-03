@@ -15,11 +15,11 @@ MATT = "+16032752718"
 CLIENT = TwilioRestClient(SID, TOKEN)
 
 
-def get_after(after):
-    return CLIENT.messages.list(after=after)
+def get_after(after, from_):
+    return [r for r in CLIENT.messages.list(after=after, from_=from_) if r.date_sent > after]
 
-def get_today():
-    return get_after(datetime.datetime.now().date())
+def get_today(from_):
+    return get_after(datetime.datetime.now().date(), from_)
 
 
 def send(to, msg, from_=NUMBER):

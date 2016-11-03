@@ -1,15 +1,16 @@
 
+import collections
 import datetime
 
 
 class DataPoint(object):
 
-    def __init__(self, timestamp, predicted_delta_seconds):
-        self.timestamp = datetime.datetime.fromtimestamp(timestamp)
-        self.predicted_delta_seconds = [datetime.timedelta(seconds=t) for t in sorted(predicted_delta_seconds)]
+    def __init__(self, data_json):
+        self.timestamp = datetime.datetime.fromtimestamp(data_json['now'])
+        self.predictions = sorted(data_json['predictions'], key=lambda d: int(d['seconds']))
 
     def has_times(self):
-        return bool(self.predicted_delta_seconds)
+        return bool(self.predictions)
 
     def datetime(self):
         return self.timestamp
@@ -18,7 +19,7 @@ class DataPoint(object):
         return self.timestamp.time()
 
     def next_delta(self):
-        return self.predicted_delta_seconds[0]
+        return datetime.timedelta(seconds=self.predictions[0]['seconds'])
 
     def next_predicted(self):
         return (self.timestamp + self.next_delta()).time()

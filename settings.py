@@ -7,7 +7,7 @@ import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent
 LIB_PATH = ROOT / "lib"
-LOG_PATH = ROOT / "MBTA.log"
-CONFIGS_PATH = ROOT / "configs.csv"
+LOG_PATH = ROOT / "logs"
+CONFIG_PATH = ROOT / "configs"
 
 sys.path.append(str(LIB_PATH))
